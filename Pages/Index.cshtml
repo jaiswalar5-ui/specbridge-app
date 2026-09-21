@@ -4,23 +4,44 @@
     ViewData["Title"] = "Specification Copilot";
 }
 
-<div class="hero-section">
-    <h1>SpecBridge AI</h1>
-    <p class="tagline">Senior Business Analyst Requirement-to-Delivery Copilot</p>
-</div>
-
-<div class="container">
-    <div class="input-card">
-        <h2>Raw Requirements Input</h2>
-        <p class="description">Enter informal or raw client requirements to generate structured specifications, detect missing gaps, and flag risks.</p>
-        <textarea id="rawRequirementInput" rows="6" placeholder="e.g. We need a leave management system with manager approvals and email notifications..."></textarea>
-        <div class="actions">
-            <button id="generateBtn" class="btn btn-primary" type="button">Generate Specification</button>
+<div class="shell">
+    <section class="hero-section">
+        <div>
+            <p class="eyebrow">REQUIREMENTS INTELLIGENCE / 01</p>
+            <h1>From raw ideas<br /><em>to buildable truth.</em></h1>
+            <p class="tagline">A senior BA copilot for turning ambiguity into a specification your team can act on.</p>
         </div>
-    </div>
+        <div class="hero-mark" aria-hidden="true"><span>SB</span><i></i></div>
+    </section>
 
-    <div id="outputSection" class="output-card" style="display:none;">
-        <h2>Structured Specification Output</h2>
-        <pre id="specOutput"></pre>
-    </div>
+    <main class="workspace">
+        <section class="input-panel">
+            <div class="panel-heading">
+                <div><span class="step-number">01</span><h2>Brief the bridge</h2></div>
+                <span class="panel-note">Plain language is welcome</span>
+            </div>
+            <label for="rawRequirementInput">Your requirements</label>
+            <textarea id="rawRequirementInput" rows="10" maxlength="20000" placeholder="Tell us what you are building, who it serves, and what success looks like..."></textarea>
+            <div class="input-footer">
+                <span id="characterCount">0 / 20,000</span>
+                <button id="generateBtn" class="btn btn-primary" type="button"><span>Generate specification</span><strong>-></strong></button>
+            </div>
+            <p id="requestStatus" class="request-status" role="status"></p>
+        </section>
+
+        <section id="outputSection" class="output-panel" hidden>
+            <div class="panel-heading">
+                <div><span class="step-number">02</span><h2 id="specTitle">Your specification</h2></div>
+                <button id="copyBtn" class="btn btn-quiet" type="button" title="Copy specification">Copy JSON</button>
+            </div>
+            <p id="specSummary" class="summary"></p>
+            <div class="metric-row" id="metricRow"></div>
+            <div class="spec-grid">
+                <article class="spec-section"><h3>Functional requirements</h3><div id="functionalRequirements"></div></article>
+                <article class="spec-section"><h3>User stories</h3><div id="userStories"></div></article>
+                <article class="spec-section"><h3>Non-functional requirements</h3><div id="nonFunctionalRequirements"></div></article>
+                <article class="spec-section attention"><h3>Open gaps & risks</h3><div id="gapsAndRisks"></div></article>
+            </div>
+        </section>
+    </main>
 </div>

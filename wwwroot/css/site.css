@@ -1,104 +1,64 @@
-:root {
-    --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
-    --background-color: #f8fafc;
-    --card-background: #ffffff;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --border-color: #e2e8f0;
-}
+:root { --ink: #17221f; --muted: #65736d; --paper: #f4f3ee; --panel: #fffefa; --line: #d9ded8; --accent: #d85c3d; --mint: #c8dfcb; }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: Georgia, "Times New Roman", serif;
     margin: 0;
     padding: 0;
-    background-color: var(--background-color);
-    color: var(--text-primary);
+    background: radial-gradient(circle at 80% 0%, #e8efe5 0, transparent 32rem), var(--paper);
+    color: var(--ink);
+    min-width: 320px;
 }
 
-.navbar {
-    background-color: #0f172a;
-    color: white;
-    padding: 1rem 2rem;
-}
+.navbar { border-bottom: 1px solid var(--line); padding: 1.1rem clamp(1rem, 5vw, 5rem); background: rgba(255,254,250,.72); }
 
-.brand-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-}
+.brand-title { font-size: 1.25rem; font-weight: 700; letter-spacing: .04em; }
 
 .brand-subtitle {
     margin-left: 0.75rem;
     font-size: 0.875rem;
-    color: #94a3b8;
+    color: var(--muted);
 }
 
-.hero-section {
-    text-align: center;
-    padding: 2.5rem 1rem 1rem;
-}
+.shell { max-width: 1240px; margin: auto; padding: 0 clamp(1rem, 5vw, 4rem) 4rem; }
+.hero-section { display: flex; justify-content: space-between; align-items: end; gap: 2rem; padding: clamp(3rem, 9vw, 7rem) 0 4rem; }
+.eyebrow, .panel-note, label, .step-number { font: 700 .7rem/1.2 Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 
 .hero-section h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-size: clamp(3rem, 7vw, 6.7rem); line-height: .92; letter-spacing: -.04em; margin: .7rem 0 1.4rem; font-weight: 500;
 }
+.hero-section h1 em { color: var(--accent); font-weight: 400; }
 
 .tagline {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
+    color: var(--muted); font: 1.1rem/1.55 Arial, sans-serif; max-width: 31rem;
 }
+.hero-mark { width: 10rem; height: 10rem; border: 1px solid var(--ink); border-radius: 50%; display: grid; place-items: center; position: relative; transform: rotate(-14deg); flex: 0 0 auto; }
+.hero-mark span { font-size: 2.5rem; }.hero-mark i { position: absolute; width: 1rem; height: 1rem; background: var(--accent); border-radius: 50%; top: 1rem; right: 1.2rem; }
 
 .container {
-    max-width: 900px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
+    max-width: 900px; margin: 1.5rem auto; padding: 0 1rem;
 }
-
-.input-card, .output-card {
-    background: var(--card-background);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
+.workspace { display: grid; grid-template-columns: minmax(18rem, .8fr) minmax(0, 1.6fr); gap: 1.2rem; align-items: start; }
+.input-panel, .output-panel { background: var(--panel); border: 1px solid var(--line); padding: clamp(1.25rem, 3vw, 2rem); }
+.output-panel { grid-column: 2; grid-row: 1; }
+.panel-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 2rem; }.panel-heading > div { display: flex; gap: .8rem; align-items: baseline; }
+h2 { font-size: 1.55rem; margin: 0; font-weight: 500; }.step-number { color: var(--accent); }.panel-note { letter-spacing: .02em; text-transform: none; font-weight: 400; }
 
 textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 1rem;
-    resize: vertical;
+    display: block; width: 100%; box-sizing: border-box; margin-top: .7rem; padding: 1rem; border: 1px solid var(--line); background: #f8f8f3; color: var(--ink); font: 1rem/1.6 Arial, sans-serif; resize: vertical; min-height: 15rem;
 }
-
-.actions {
-    margin-top: 1rem;
-    text-align: right;
-}
+.input-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; color: var(--muted); font: .75rem Arial, sans-serif; }
 
 .btn {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+    padding: .8rem 1rem; font: 700 .75rem Arial, sans-serif; border: 1px solid transparent; cursor: pointer; text-transform: uppercase; letter-spacing: .05em;
 }
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-hover);
-}
+.btn-primary { background: var(--accent); color: white; }.btn-primary strong { margin-left: 1.3rem; font-size: 1rem; }.btn:disabled { opacity: .55; cursor: wait; }.btn-quiet { background: transparent; border-color: var(--line); color: var(--ink); }
+.request-status { min-height: 1.1rem; color: var(--accent); font: .8rem Arial, sans-serif; }.summary { color: var(--muted); font: .95rem/1.5 Arial, sans-serif; }.metric-row { display: flex; gap: .6rem; flex-wrap: wrap; margin: 1.5rem 0; }.metric { background: var(--mint); padding: .6rem .8rem; font: .75rem Arial, sans-serif; }.metric b { display: block; font-size: 1.2rem; margin-bottom: .2rem; }
+.spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); }.spec-section { background: var(--panel); padding: 1.2rem; min-height: 9rem; }.spec-section h3 { margin: 0 0 1rem; font-size: 1rem; font-weight: 500; }.spec-section.attention h3 { color: var(--accent); }.spec-item { border-top: 1px solid var(--line); padding: .75rem 0; font: .82rem/1.45 Arial, sans-serif; }.spec-item:first-child { border-top: 0; padding-top: 0; }.spec-item b { display: block; margin-bottom: .25rem; }.pill { color: var(--accent); font-size: .65rem; text-transform: uppercase; }
 
 .footer {
     text-align: center;
     padding: 2rem;
-    color: var(--text-secondary);
+    color: var(--muted);
     font-size: 0.875rem;
 }
+@media (max-width: 800px) { .hero-section { align-items: start; }.hero-mark { width: 5rem; height: 5rem; }.hero-mark span { font-size: 1.3rem; }.workspace { grid-template-columns: 1fr; }.output-panel { grid-column: 1; grid-row: auto; }.spec-grid { grid-template-columns: 1fr; } }
