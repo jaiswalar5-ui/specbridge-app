@@ -9,6 +9,7 @@ builder.Configuration.AddUserSecrets<Program>();
 // 2. Add services for Razor Pages and Web API Controllers
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
+builder.Services.AddHttpClient<ISpecGeneratorService, LlmSpecGeneratorService>();
 
 // 3. Configure ASP.NET Core built-in Rate Limiting middleware
 builder.Services.AddRateLimiter(options =>
