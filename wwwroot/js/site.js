@@ -73,4 +73,23 @@ document.addEventListener("DOMContentLoaded", () => {
         await navigator.clipboard.writeText(JSON.stringify(latestSpecification, null, 2));
         requestStatus.textContent = "Specification JSON copied.";
     });
+
+    document.getElementById("exportBtn").addEventListener("click", async () => {
+        if (!latestSpecification) return;
+        const response = await fetch("/api/export-pdf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(latestSpecification)
+        });
+        if (!response.ok) {
+            requestStatus.textContent = "PDF export failed.";
+            return;
+        }
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(await response.blob());
+        link.download = "specbridge-specification.pdf";
+        link.click();
+        URL.revokeObjectURL(link.href);
+        requestStatus.textContent = "PDF download started.";
+    });
 });

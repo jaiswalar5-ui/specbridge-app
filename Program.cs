@@ -1,7 +1,10 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 // 1. Configure User Secrets for local development (LLM API key should be loaded via User Secrets)
 builder.Configuration.AddUserSecrets<Program>();
@@ -10,6 +13,7 @@ builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddHttpClient<ISpecGeneratorService, LlmSpecGeneratorService>();
+builder.Services.AddSingleton<IPdfExportService, PdfExportService>();
 
 // 3. Configure ASP.NET Core built-in Rate Limiting middleware
 builder.Services.AddRateLimiter(options =>

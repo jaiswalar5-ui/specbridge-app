@@ -12,13 +12,16 @@ public class SpecController : ControllerBase
 {
     private readonly ILogger<SpecController> _logger;
     private readonly ISpecGeneratorService _specGeneratorService;
+    private readonly IPdfExportService _pdfExportService;
 
     public SpecController(
         ILogger<SpecController> logger,
-        ISpecGeneratorService specGeneratorService)
+        ISpecGeneratorService specGeneratorService,
+        IPdfExportService pdfExportService)
     {
         _logger = logger;
         _specGeneratorService = specGeneratorService;
+        _pdfExportService = pdfExportService;
     }
 
     [HttpPost("/api/generate-spec")]
@@ -61,5 +64,18 @@ public class SpecController : ControllerBase
             _logger.LogError(exception, "Specification provider request failed");
             return StatusCode(StatusCodes.Status502BadGateway, new { error = "The specification provider is unavailable." });
         }
+    }
+
+    [HttpPost("/api/export-pdf")]
+    [Produces("application/pdf")]
+    public ActionResult ExportPdf([FromBody] SpecificationDocument? specification)
+    {
+        if (specification is null)
+        {
+            return BadRequest(new { error = "A specification document is required." });
+        }
+
+        var pdf = _pdfExportService.CreatePdf(specification);
+        return File(pdf, "application/pdf", "specbridge-specification.pdf");
     }
 }
