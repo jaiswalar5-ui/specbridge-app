@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SpecBridge AI</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <span class="brand-title">SpecBridge AI</span>
+                <span class="brand-subtitle">Requirement-to-Delivery Copilot</span>
+            </div>
+        </nav>
+    </header>
+    <main role="main" class="main-content">
+        @RenderBody()
+    </main>
+    <footer class="footer">
+        <p>&copy; @DateTime.UtcNow.Year SpecBridge AI. All rights reserved.</p>
+    </footer>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

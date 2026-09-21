@@ -1,0 +1,26 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Specification Copilot";
+}
+
+<div class="hero-section">
+    <h1>SpecBridge AI</h1>
+    <p class="tagline">Senior Business Analyst Requirement-to-Delivery Copilot</p>
+</div>
+
+<div class="container">
+    <div class="input-card">
+        <h2>Raw Requirements Input</h2>
+        <p class="description">Enter informal or raw client requirements to generate structured specifications, detect missing gaps, and flag risks.</p>
+        <textarea id="rawRequirementInput" rows="6" placeholder="e.g. We need a leave management system with manager approvals and email notifications..."></textarea>
+        <div class="actions">
+            <button id="generateBtn" class="btn btn-primary" type="button">Generate Specification</button>
+        </div>
+    </div>
+
+    <div id="outputSection" class="output-card" style="display:none;">
+        <h2>Structured Specification Output</h2>
+        <pre id="specOutput"></pre>
+    </div>
+</div>
