@@ -1,6 +1,6 @@
 namespace SpecBridge.Models;
 
-public class SpecRequest
+public sealed class SpecRequest
 {
-    public string Prompt { get; set; } = string.Empty;
+    public string Prompt { get; init; } = string.Empty;
 }
