@@ -1,50 +1,51 @@
+using System.Text.Json.Serialization;
+
 namespace SpecBridge.Models;
 
-public sealed class SpecificationDocument
-{
-    public string Title { get; init; } = "Generated Specification";
-    public string Summary { get; init; } = string.Empty;
-    public List<FunctionalRequirement> FunctionalRequirements { get; init; } = [];
-    public List<NonFunctionalRequirement> NonFunctionalRequirements { get; init; } = [];
-    public List<UserStory> UserStories { get; init; } = [];
-    public List<RequirementGap> Gaps { get; init; } = [];
-    public List<RequirementRisk> Risks { get; init; } = [];
-}
+public record SpecResponse(
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("summary")] string Summary,
+    [property: JsonPropertyName("functionalRequirements")] IReadOnlyList<FunctionalRequirement> FunctionalRequirements,
+    [property: JsonPropertyName("nonFunctionalRequirements")] IReadOnlyList<NonFunctionalRequirement> NonFunctionalRequirements,
+    [property: JsonPropertyName("userStories")] IReadOnlyList<UserStory> UserStories,
+    [property: JsonPropertyName("clarifyingQuestions")] IReadOnlyList<ClarifyingQuestion> ClarifyingQuestions,
+    [property: JsonPropertyName("risks")] IReadOnlyList<Risk> Risks
+);
 
-public sealed class FunctionalRequirement
-{
-    public string Id { get; init; } = string.Empty;
-    public string Description { get; init; } = string.Empty;
-    public string Priority { get; init; } = "Must";
-    public List<string> AcceptanceCriteria { get; init; } = [];
-}
+public record FunctionalRequirement(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("description")] string Description,
+    [property: JsonPropertyName("priority")] string Priority,
+    [property: JsonPropertyName("acceptanceCriteria")] IReadOnlyList<string> AcceptanceCriteria
+);
 
-public sealed class NonFunctionalRequirement
-{
-    public string Category { get; init; } = string.Empty;
-    public string Requirement { get; init; } = string.Empty;
-    public string Target { get; init; } = string.Empty;
-}
+public record NonFunctionalRequirement(
+    [property: JsonPropertyName("category")] string Category,
+    [property: JsonPropertyName("requirement")] string Requirement,
+    [property: JsonPropertyName("target")] string Target
+);
 
-public sealed class UserStory
-{
-    public string Id { get; init; } = string.Empty;
-    public string AsA { get; init; } = string.Empty;
-    public string IWant { get; init; } = string.Empty;
-    public string SoThat { get; init; } = string.Empty;
-    public List<string> AcceptanceCriteria { get; init; } = [];
-}
+public record UserStory(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("asA")] string AsA,
+    [property: JsonPropertyName("iWant")] string IWant,
+    [property: JsonPropertyName("soThat")] string SoThat,
+    [property: JsonPropertyName("acceptanceCriteria")] IReadOnlyList<string> AcceptanceCriteria
+);
 
-public sealed class RequirementGap
-{
-    public string Area { get; init; } = string.Empty;
-    public string Question { get; init; } = string.Empty;
-    public string Impact { get; init; } = string.Empty;
-}
+public record ClarifyingQuestion(
+    [property: JsonPropertyName("area")] string Area,
+    [property: JsonPropertyName("question")] string Question,
+    [property: JsonPropertyName("impact")] string Impact
+);
 
-public sealed class RequirementRisk
+public record Risk(
+    [property: JsonPropertyName("description")] string Description,
+    [property: JsonPropertyName("severity")] string Severity,
+    [property: JsonPropertyName("mitigation")] string Mitigation
+);
+
+[JsonSerializable(typeof(SpecResponse))]
+public partial class SpecContext : JsonSerializerContext
 {
-    public string Description { get; init; } = string.Empty;
-    public string Severity { get; init; } = "Medium";
-    public string Mitigation { get; init; } = string.Empty;
 }
