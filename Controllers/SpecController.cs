@@ -25,9 +25,9 @@ public class SpecController : ControllerBase
     }
 
     [HttpPost("/api/generate-spec")]
-    [ProducesResponseType(typeof(SpecResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<ActionResult<SpecResponse>> GenerateSpec(
+    public async Task<ActionResult> GenerateSpec(
         [FromBody] SpecRequest? request,
         CancellationToken cancellationToken)
     {
@@ -46,7 +46,7 @@ public class SpecController : ControllerBase
             _logger.LogInformation("Processing spec generation request");
             var specification = await _specGeneratorService.GenerateSpecAsync(request.Prompt, cancellationToken);
 
-            return Ok(new SpecResponse
+            return Ok(new 
             {
                 Status = "Success",
                 Message = "Specification generated successfully.",
@@ -68,7 +68,7 @@ public class SpecController : ControllerBase
 
     [HttpPost("/api/export-pdf")]
     [Produces("application/pdf")]
-    public ActionResult ExportPdf([FromBody] SpecificationDocument? specification)
+    public ActionResult ExportPdf([FromBody] SpecResponse? specification)
     {
         if (specification is null)
         {

@@ -50,13 +50,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("metricRow").innerHTML = [
                     [latestSpecification.functionalRequirements?.length || 0, "functional"],
                     [latestSpecification.userStories?.length || 0, "stories"],
-                    [latestSpecification.gaps?.length || 0, "open gaps"],
+                    [latestSpecification.clarifyingQuestions?.length || 0, "open gaps"],
                     [latestSpecification.risks?.length || 0, "risks"]
                 ].map(([count, label]) => `<span class="metric"><b>${count}</b>${label}</span>`).join("");
                 renderList("functionalRequirements", latestSpecification.functionalRequirements, item => `<div class="spec-item"><b>${item.id} <span class="pill">${item.priority}</span></b>${item.description}</div>`);
                 renderList("userStories", latestSpecification.userStories, item => `<div class="spec-item"><b>${item.id}</b>As a ${item.asA}, I want ${item.iWant}, so that ${item.soThat}.</div>`);
                 renderList("nonFunctionalRequirements", latestSpecification.nonFunctionalRequirements, item => `<div class="spec-item"><b>${item.category}</b>${item.requirement}<br><span class="pill">Target: ${item.target}</span></div>`);
-                renderList("gapsAndRisks", [...(latestSpecification.gaps || []).map(item => ({ ...item, type: "Gap", text: item.question })), ...(latestSpecification.risks || []).map(item => ({ ...item, type: "Risk", text: item.description }))], item => `<div class="spec-item"><b><span class="pill">${item.type}</span> ${item.area || item.severity}</b>${item.text}</div>`);
+                renderList("gapsAndRisks", [...(latestSpecification.clarifyingQuestions || []).map(item => ({ ...item, type: "Gap", text: item.question })), ...(latestSpecification.risks || []).map(item => ({ ...item, type: "Risk", text: item.description }))], item => `<div class="spec-item"><b><span class="pill">${item.type}</span> ${item.area || item.severity}</b>${item.text}</div>`);
                 requestStatus.textContent = "Specification ready.";
             } catch (err) {
                 console.error("Error generating spec:", err);

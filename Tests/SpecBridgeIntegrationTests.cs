@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using SpecBridge.Models;
 using SpecBridge.Services;
+using Xunit;
 
 namespace SpecBridge.Tests;
 
@@ -45,18 +46,21 @@ public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFa
     [Fact]
     public async Task SpecificationContract_RoundTripsStructuredSections()
     {
-        var document = new SpecificationDocument
-        {
-            Title = "Leave management",
-            FunctionalRequirements = [new FunctionalRequirement { Id = "FR-001", Description = "Submit leave" }],
-            Gaps = [new RequirementGap { Area = "Notifications", Question = "Which channels?" }]
-        };
+        var document = new SpecResponse(
+            Title: "Leave management",
+            Summary: "",
+            FunctionalRequirements: [new FunctionalRequirement("FR-001", "Submit leave", "Must", [])],
+            NonFunctionalRequirements: [],
+            UserStories: [],
+            ClarifyingQuestions: [new ClarifyingQuestion("Notifications", "Which channels?", "")],
+            Risks: []
+        );
 
-        var json = JsonSerializer.Serialize(document);
-        var parsed = JsonSerializer.Deserialize<SpecificationDocument>(json);
+        var json = JsonSerializer.Serialize(document, SpecContext.Default.SpecResponse);
+        var parsed = JsonSerializer.Deserialize(json, SpecContext.Default.SpecResponse);
 
         Assert.Equal("FR-001", parsed!.FunctionalRequirements[0].Id);
-        Assert.Equal("Which channels?", parsed.Gaps[0].Question);
+        Assert.Equal("Which channels?", parsed.ClarifyingQuestions[0].Question);
     }
 }
 
@@ -73,8 +77,16 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
 
 internal sealed class FakeSpecGeneratorService : ISpecGeneratorService
 {
-    public Task<SpecificationDocument> GenerateSpecAsync(string prompt, CancellationToken cancellationToken = default)
+    public Task<SpecResponse> GenerateSpecAsync(string prompt, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(new SpecificationDocument { Title = prompt });
+        return Task.FromResult(new SpecResponse(
+            Title: prompt,
+            Summary: "",
+            FunctionalRequirements: [],
+            NonFunctionalRequirements: [],
+            UserStories: [],
+            ClarifyingQuestions: [],
+            Risks: []
+        ));
     }
 }
