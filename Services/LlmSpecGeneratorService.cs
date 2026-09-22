@@ -8,12 +8,6 @@ namespace SpecBridge.Services;
 
 public sealed class LlmSpecGeneratorService : ISpecGeneratorService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNameCaseInsensitive = true,
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip
-    };
-
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<LlmSpecGeneratorService> _logger;
@@ -28,7 +22,7 @@ public sealed class LlmSpecGeneratorService : ISpecGeneratorService
         _logger = logger;
     }
 
-    public async Task<SpecificationDocument> GenerateSpecAsync(
+    public async Task<SpecResponse> GenerateSpecAsync(
         string prompt,
         CancellationToken cancellationToken = default)
     {
@@ -50,7 +44,7 @@ public sealed class LlmSpecGeneratorService : ISpecGeneratorService
         var json = ExtractJson(responseBody, provider);
         try
         {
-            return JsonSerializer.Deserialize<SpecificationDocument>(json, JsonOptions)
+            return JsonSerializer.Deserialize(json, SpecContext.Default.SpecResponse)
                 ?? throw new JsonException("The LLM returned an empty specification.");
         }
         catch (JsonException exception)
@@ -129,7 +123,17 @@ public sealed class LlmSpecGeneratorService : ISpecGeneratorService
 
     private static string BuildSystemPrompt() => """
         You are a senior business analyst. Convert the user's raw requirements into a complete specification.
-        Return only valid JSON matching this exact shape: {"title":"","summary":"","functionalRequirements":[{"id":"FR-001","description":"","priority":"Must|Should|Could|Won't","acceptanceCriteria":[""]}],"nonFunctionalRequirements":[{"category":"","requirement":"","target":""}],"userStories":[{"id":"US-001","asA":"","iWant":"","soThat":"","acceptanceCriteria":[""]}],"gaps":[{"area":"","question":"","impact":""}],"risks":[{"description":"","severity":"Low|Medium|High|Critical","mitigation":""}]}
-        Infer carefully, label assumptions as gaps, and identify risks. Never wrap the JSON in markdown.
+        Return only valid JSON matching this exact shape:
+        {
+          "title": "",
+          "summary": "",
+          "functionalRequirements": [{"id": "FR-001", "description": "", "priority": "Must|Should|Could|Won't", "acceptanceCriteria": [""]}],
+          "nonFunctionalRequirements": [{"category": "", "requirement": "", "target": ""}],
+          "userStories": [{"id": "US-001", "asA": "", "iWant": "", "soThat": "", "acceptanceCriteria": [""]}],
+          "clarifyingQuestions": [{"area": "", "question": "", "impact": ""}],
+          "risks": [{"description": "", "severity": "Low|Medium|High|Critical", "mitigation": ""}]
+        }
+        Infer carefully, label assumptions as clarifyingQuestions, and identify risks. Never wrap the JSON in markdown.
+        If the raw input contains PII, passwords, or sensitive data, redact it immediately and note the redaction in the risks section.
         """;
 }

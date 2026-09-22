@@ -4,5 +4,7 @@ using SpecBridge.Models;
 
 public interface ISpecGeneratorService
 {
-    Task<SpecificationDocument> GenerateSpecAsync(string prompt, CancellationToken cancellationToken = default);
+    Task<SpecResponse> GenerateSpecAsync(
+        string prompt,
+        CancellationToken cancellationToken = default);
 }
