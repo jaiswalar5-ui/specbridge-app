@@ -11,16 +11,16 @@ namespace SpecBridge.Controllers;
 public class SpecController : ControllerBase
 {
     private readonly ILogger<SpecController> _logger;
-    private readonly ISpecGeneratorService _specGeneratorService;
+    private readonly IAiService _aiService;
     private readonly IPdfExportService _pdfExportService;
 
     public SpecController(
         ILogger<SpecController> logger,
-        ISpecGeneratorService specGeneratorService,
+        IAiService aiService,
         IPdfExportService pdfExportService)
     {
         _logger = logger;
-        _specGeneratorService = specGeneratorService;
+        _aiService = aiService;
         _pdfExportService = pdfExportService;
     }
 
@@ -41,29 +41,16 @@ public class SpecController : ControllerBase
             return BadRequest(new { error = "Prompt must be 20,000 characters or fewer." });
         }
 
-        try
-        {
-            _logger.LogInformation("Processing spec generation request");
-            var specification = await _specGeneratorService.GenerateSpecAsync(request.Prompt, cancellationToken);
+        _logger.LogInformation("Processing spec generation request");
+        var specification = await _aiService.GenerateSpecAsync(request.Prompt, cancellationToken);
 
-            return Ok(new 
-            {
-                Status = "Success",
-                Message = "Specification generated successfully.",
-                Timestamp = DateTime.UtcNow,
-                Specification = specification
-            });
-        }
-        catch (InvalidOperationException exception)
+        return Ok(new
         {
-            _logger.LogError(exception, "Specification generation configuration or parsing failed");
-            return StatusCode(StatusCodes.Status502BadGateway, new { error = exception.Message });
-        }
-        catch (HttpRequestException exception)
-        {
-            _logger.LogError(exception, "Specification provider request failed");
-            return StatusCode(StatusCodes.Status502BadGateway, new { error = "The specification provider is unavailable." });
-        }
+            Status = "Success",
+            Message = "Specification generated successfully.",
+            Timestamp = DateTime.UtcNow,
+            Specification = specification
+        });
     }
 
     [HttpPost("/api/export-pdf")]

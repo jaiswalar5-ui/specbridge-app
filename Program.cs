@@ -2,6 +2,8 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using QuestPDF.Infrastructure;
 using SpecBridge.Services;
+using Polly;
+using Polly.Extensions.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +15,15 @@ builder.Configuration.AddUserSecrets<Program>();
 // 2. Add services for Razor Pages and Web API Controllers
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
-builder.Services.AddHttpClient<ISpecGeneratorService, LlmSpecGeneratorService>();
+
+builder.Services.AddHttpClient("AiServiceClient")
+    .AddPolicyHandler(HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
+                                              + TimeSpan.FromMilliseconds(Random.Shared.Next(0, 1000))));
+
+builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddSingleton<IPdfExportService, PdfExportService>();
 
 // 3. Configure ASP.NET Core built-in Rate Limiting middleware

@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using SpecBridge.Models;
 using SpecBridge.Services;
 using Xunit;
@@ -44,7 +46,7 @@ public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFa
     }
 
     [Fact]
-    public async Task SpecificationContract_RoundTripsStructuredSections()
+    public void SpecificationContract_RoundTripsStructuredSections()
     {
         var document = new SpecResponse(
             Title: "Leave management",
@@ -62,6 +64,61 @@ public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFa
         Assert.Equal("FR-001", parsed!.FunctionalRequirements[0].Id);
         Assert.Equal("Which channels?", parsed.ClarifyingQuestions[0].Question);
     }
+
+    [Fact]
+    public async Task AiService_ReturnsParsingErrorForMalformedProviderEnvelope()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Llm:Provider"] = "openai",
+                ["Llm:ApiKey"] = "test-key"
+            })
+            .Build();
+        var service = new AiService(
+            new StubHttpClientFactory("{}"),
+            configuration,
+            NullLogger<AiService>.Instance);
+
+        var response = await service.GenerateSpecAsync("Create a leave workflow.");
+
+        Assert.Equal("Parsing Error", response.Title);
+    }
+}
+
+internal sealed class StubHttpClientFactory : IHttpClientFactory
+{
+    private readonly string _responseBody;
+
+    public StubHttpClientFactory(string responseBody)
+    {
+        _responseBody = responseBody;
+    }
+
+    public HttpClient CreateClient(string name)
+    {
+        return new HttpClient(new StubHttpMessageHandler(_responseBody));
+    }
+}
+
+internal sealed class StubHttpMessageHandler : HttpMessageHandler
+{
+    private readonly string _responseBody;
+
+    public StubHttpMessageHandler(string responseBody)
+    {
+        _responseBody = responseBody;
+    }
+
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request,
+        CancellationToken cancellationToken)
+    {
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(_responseBody)
+        });
+    }
 }
 
 public sealed class TestApplicationFactory : WebApplicationFactory<Program>
@@ -70,12 +127,12 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureServices(services =>
         {
-            services.AddSingleton<ISpecGeneratorService, FakeSpecGeneratorService>();
+            services.AddSingleton<IAiService, FakeAiService>();
         });
     }
 }
 
-internal sealed class FakeSpecGeneratorService : ISpecGeneratorService
+internal sealed class FakeAiService : IAiService
 {
     public Task<SpecResponse> GenerateSpecAsync(string prompt, CancellationToken cancellationToken = default)
     {
