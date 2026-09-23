@@ -1,23 +1,21 @@
 using System.Net.Http.Headers;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using SpecBridge.Models;
 
 namespace SpecBridge.Services;
 
-public sealed class LlmSpecGeneratorService : ISpecGeneratorService
+public sealed class AiService : IAiService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
-    private readonly ILogger<LlmSpecGeneratorService> _logger;
+    private readonly ILogger<AiService> _logger;
 
-    public LlmSpecGeneratorService(
-        HttpClient httpClient,
+    public AiService(
+        IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
-        ILogger<LlmSpecGeneratorService> logger)
+        ILogger<AiService> logger)
     {
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
         _configuration = configuration;
         _logger = logger;
     }
@@ -31,17 +29,40 @@ public sealed class LlmSpecGeneratorService : ISpecGeneratorService
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            throw new InvalidOperationException("LLM API key is not configured. Add Llm:ApiKey using user-secrets.");
+            _logger.LogError("LLM API key is not configured.");
+            return CreateErrorResponse("Configuration Error", "LLM API key is not configured.");
         }
 
-        var responseBody = provider switch
+        string responseBody;
+        try
         {
-            "gemini" => await CallGeminiAsync(prompt, apiKey, cancellationToken),
-            "openai" => await CallOpenAiAsync(prompt, apiKey, cancellationToken),
-            _ => throw new InvalidOperationException($"Unsupported LLM provider '{provider}'.")
-        };
+            responseBody = provider switch
+            {
+                "gemini" => await CallGeminiAsync(prompt, apiKey, cancellationToken),
+                "openai" => await CallOpenAiAsync(prompt, apiKey, cancellationToken),
+                _ => throw new InvalidOperationException($"Unsupported LLM provider '{provider}'.")
+            };
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "LLM provider request failed for provider {Provider}.", provider);
+            return CreateErrorResponse("API Error", "The LLM provider is currently unavailable or returned an error.");
+        }
 
-        var json = ExtractJson(responseBody, provider);
+        string json;
+        try
+        {
+            json = ExtractJson(responseBody, provider);
+        }
+        catch (Exception exception) when (exception is JsonException
+            or InvalidOperationException
+            or KeyNotFoundException
+            or IndexOutOfRangeException)
+        {
+            _logger.LogError(exception, "Failed to extract JSON from LLM response.");
+            return CreateErrorResponse("Parsing Error", "The LLM returned a response that did not contain valid JSON.");
+        }
+
         try
         {
             return JsonSerializer.Deserialize(json, SpecContext.Default.SpecResponse)
@@ -49,8 +70,8 @@ public sealed class LlmSpecGeneratorService : ISpecGeneratorService
         }
         catch (JsonException exception)
         {
-            _logger.LogError(exception, "LLM returned invalid specification JSON: {Response}", json);
-            throw new InvalidOperationException("The LLM response did not match the specification schema.", exception);
+            _logger.LogError(exception, "LLM returned invalid specification JSON.");
+            return CreateErrorResponse("Validation Error", "The LLM response could not be parsed into the required specification schema.");
         }
     }
 
@@ -77,7 +98,8 @@ public sealed class LlmSpecGeneratorService : ISpecGeneratorService
     private async Task<string> CallGeminiAsync(string prompt, string apiKey, CancellationToken cancellationToken)
     {
         var model = _configuration["Llm:GeminiModel"] ?? "gemini-1.5-flash";
-        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
+        // Use x-goog-api-key header to avoid logging the API key in the URL
+        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
             Content = JsonContent.Create(new
@@ -86,17 +108,21 @@ public sealed class LlmSpecGeneratorService : ISpecGeneratorService
                 generationConfig = new { temperature = 0.1, responseMimeType = "application/json" }
             })
         };
+        request.Headers.Add("x-goog-api-key", apiKey);
 
         return await SendAsync(request, cancellationToken);
     }
 
     private async Task<string> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        using var client = _httpClientFactory.CreateClient("AiServiceClient");
+        using var response = await client.SendAsync(request, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("LLM request failed with status {StatusCode}: {Body}", response.StatusCode, body);
+            _logger.LogWarning("LLM request failed with status {StatusCode} and response length {ResponseLength}.",
+                response.StatusCode,
+                body.Length);
             throw new HttpRequestException("The LLM provider rejected the request.", null, response.StatusCode);
         }
 
@@ -136,4 +162,17 @@ public sealed class LlmSpecGeneratorService : ISpecGeneratorService
         Infer carefully, label assumptions as clarifyingQuestions, and identify risks. Never wrap the JSON in markdown.
         If the raw input contains PII, passwords, or sensitive data, redact it immediately and note the redaction in the risks section.
         """;
+
+    private static SpecResponse CreateErrorResponse(string title, string message)
+    {
+        return new SpecResponse(
+            Title: title,
+            Summary: message,
+            FunctionalRequirements: Array.Empty<FunctionalRequirement>(),
+            NonFunctionalRequirements: Array.Empty<NonFunctionalRequirement>(),
+            UserStories: Array.Empty<UserStory>(),
+            ClarifyingQuestions: Array.Empty<ClarifyingQuestion>(),
+            Risks: Array.Empty<Risk>()
+        );
+    }
 }

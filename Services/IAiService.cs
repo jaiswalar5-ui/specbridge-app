@@ -2,7 +2,7 @@ namespace SpecBridge.Services;
 
 using SpecBridge.Models;
 
-public interface ISpecGeneratorService
+public interface IAiService
 {
     Task<SpecResponse> GenerateSpecAsync(
         string prompt,
