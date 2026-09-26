@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const renderList = (elementId, items, renderItem) => {
         const element = document.getElementById(elementId);
-        element.innerHTML = items?.length ? items.map(renderItem).join("") : '<p class="spec-item">Nothing identified yet.</p>';
+        element.innerHTML = items?.length ? `<ul class="list-group list-group-flush">${items.map(renderItem).join("")}</ul>` : '<p class="text-muted small">Nothing identified yet.</p>';
     };
 
     if (generateBtn) {
@@ -24,8 +24,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            const generateSpinner = document.getElementById("generateSpinner");
+            const generateBtnText = document.getElementById("generateBtnText");
+
             generateBtn.disabled = true;
-            generateBtn.innerText = "Analyzing...";
+            if (generateSpinner) generateSpinner.classList.remove("d-none");
+            if (generateBtnText) generateBtnText.innerText = "Analyzing...";
+
+            // Progressive loading states messages
+            const loadingMessages = [
+                "Sending to AI...",
+                "Analyzing requirements...",
+                "Identifying gaps and risks...",
+                "Structuring user stories...",
+                "Finalizing specification...",
+                "Almost there..."
+            ];
+            let messageIndex = 0;
+            requestStatus.textContent = loadingMessages[messageIndex];
+            requestStatus.classList.remove("text-danger");
+
+            const statusInterval = setInterval(() => {
+                messageIndex = Math.min(messageIndex + 1, loadingMessages.length - 1);
+                requestStatus.textContent = loadingMessages[messageIndex];
+            }, 3000);
 
             try {
                 const response = await fetch("/api/generate-spec", {
@@ -36,6 +58,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     body: JSON.stringify({ prompt: text })
                 });
 
+                clearInterval(statusInterval);
+
                 if (response.status === 429) {
                     alert("Rate limit exceeded: 10 requests per minute maximum. Please wait.");
                     return;
@@ -44,7 +68,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || "Generation failed.");
                 latestSpecification = data.specification;
-                outputSection.hidden = false;
+
+                // Show Output section
+                outputSection.classList.remove('d-none');
+
                 document.getElementById("specTitle").textContent = latestSpecification.title;
                 document.getElementById("specSummary").textContent = latestSpecification.summary;
                 document.getElementById("metricRow").innerHTML = [
@@ -52,18 +79,23 @@ document.addEventListener("DOMContentLoaded", () => {
                     [latestSpecification.userStories?.length || 0, "stories"],
                     [latestSpecification.clarifyingQuestions?.length || 0, "open gaps"],
                     [latestSpecification.risks?.length || 0, "risks"]
-                ].map(([count, label]) => `<span class="metric"><b>${count}</b>${label}</span>`).join("");
-                renderList("functionalRequirements", latestSpecification.functionalRequirements, item => `<div class="spec-item"><b>${item.id} <span class="pill">${item.priority}</span></b>${item.description}</div>`);
-                renderList("userStories", latestSpecification.userStories, item => `<div class="spec-item"><b>${item.id}</b>As a ${item.asA}, I want ${item.iWant}, so that ${item.soThat}.</div>`);
-                renderList("nonFunctionalRequirements", latestSpecification.nonFunctionalRequirements, item => `<div class="spec-item"><b>${item.category}</b>${item.requirement}<br><span class="pill">Target: ${item.target}</span></div>`);
-                renderList("gapsAndRisks", [...(latestSpecification.clarifyingQuestions || []).map(item => ({ ...item, type: "Gap", text: item.question })), ...(latestSpecification.risks || []).map(item => ({ ...item, type: "Risk", text: item.description }))], item => `<div class="spec-item"><b><span class="pill">${item.type}</span> ${item.area || item.severity}</b>${item.text}</div>`);
+                ].map(([count, label]) => `<span class="badge bg-success bg-opacity-25 text-success-emphasis p-2 me-2 mb-2 border border-success border-opacity-50"><div class="fs-5 fw-bold">${count}</div><div class="small fw-normal text-uppercase">${label}</div></span>`).join("");
+
+                renderList("functionalRequirements", latestSpecification.functionalRequirements, item => `<li class="list-group-item bg-transparent px-0 border-light py-2" style="font-size: 0.85rem;"><b>${item.id} <span class="pill text-muted text-uppercase" style="font-size: .65rem;">${item.priority}</span></b> ${item.description}</li>`);
+                renderList("userStories", latestSpecification.userStories, item => `<li class="list-group-item bg-transparent px-0 border-light py-2" style="font-size: 0.85rem;"><b>${item.id}</b> As a ${item.asA}, I want ${item.iWant}, so that ${item.soThat}.</li>`);
+                renderList("nonFunctionalRequirements", latestSpecification.nonFunctionalRequirements, item => `<li class="list-group-item bg-transparent px-0 border-light py-2" style="font-size: 0.85rem;"><b>${item.category}</b> ${item.requirement}<br><span class="pill text-muted text-uppercase" style="font-size: .65rem;">Target: ${item.target}</span></li>`);
+                renderList("gapsAndRisks", [...(latestSpecification.clarifyingQuestions || []).map(item => ({ ...item, type: "Gap", text: item.question })), ...(latestSpecification.risks || []).map(item => ({ ...item, type: "Risk", text: item.description }))], item => `<li class="list-group-item bg-transparent px-0 border-light py-2 text-danger" style="font-size: 0.85rem;"><b><span class="pill text-danger text-uppercase" style="font-size: .65rem;">${item.type}</span> ${item.area || item.severity}</b> ${item.text}</li>`);
+
                 requestStatus.textContent = "Specification ready.";
             } catch (err) {
+                clearInterval(statusInterval);
                 console.error("Error generating spec:", err);
                 requestStatus.textContent = err.message;
+                requestStatus.classList.add("text-danger");
             } finally {
                 generateBtn.disabled = false;
-                generateBtn.innerText = "Generate Specification";
+                if (generateSpinner) generateSpinner.classList.add("d-none");
+                if (generateBtnText) generateBtnText.innerText = "Generate Specification";
             }
         });
     }

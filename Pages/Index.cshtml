@@ -4,44 +4,90 @@
     ViewData["Title"] = "Specification Copilot";
 }
 
-<div class="shell">
-    <section class="hero-section">
-        <div>
-            <p class="eyebrow">REQUIREMENTS INTELLIGENCE / 01</p>
-            <h1>From raw ideas<br /><em>to buildable truth.</em></h1>
-            <p class="tagline">A senior BA copilot for turning ambiguity into a specification your team can act on.</p>
+<div class="shell container mt-5 mb-5">
+    <section class="hero-section row mb-5 align-items-end">
+        <div class="col-md-9">
+            <p class="eyebrow text-muted text-uppercase fw-bold" style="letter-spacing: .14em; font-size: .7rem;">REQUIREMENTS INTELLIGENCE / 01</p>
+            <h1 class="display-4 fw-medium mb-3">From raw ideas<br /><em class="text-primary" style="color: var(--accent) !important; font-style: normal; font-weight: 400;">to buildable truth.</em></h1>
+            <p class="tagline text-muted lead">A senior BA copilot for turning ambiguity into a specification your team can act on.</p>
         </div>
-        <div class="hero-mark" aria-hidden="true"><span>SB</span><i></i></div>
+        <div class="col-md-3 d-flex justify-content-end" aria-hidden="true">
+            <div class="hero-mark" style="width: 10rem; height: 10rem; border: 1px solid var(--ink); border-radius: 50%; display: grid; place-items: center; position: relative; transform: rotate(-14deg);">
+                <span class="fs-1 fw-bold">SB</span>
+                <i style="position: absolute; width: 1rem; height: 1rem; background: var(--accent); border-radius: 50%; top: 1rem; right: 1.2rem;"></i>
+            </div>
+        </div>
     </section>
 
-    <main class="workspace">
-        <section class="input-panel">
-            <div class="panel-heading">
-                <div><span class="step-number">01</span><h2>Brief the bridge</h2></div>
-                <span class="panel-note">Plain language is welcome</span>
-            </div>
-            <label for="rawRequirementInput">Your requirements</label>
-            <textarea id="rawRequirementInput" rows="10" maxlength="20000" placeholder="Tell us what you are building, who it serves, and what success looks like..."></textarea>
-            <div class="input-footer">
-                <span id="characterCount">0 / 20,000</span>
-                <button id="generateBtn" class="btn btn-primary" type="button"><span>Generate specification</span><strong>-></strong></button>
-            </div>
-            <p id="requestStatus" class="request-status" role="status"></p>
-        </section>
+    <main class="workspace row">
+        <div class="col-lg-5 col-md-12 mb-4">
+            <section class="input-panel card p-4 shadow-sm h-100" style="background-color: var(--panel); border-color: var(--line);">
+                <div class="panel-heading d-flex justify-content-between align-items-baseline mb-4">
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="step-number fw-bold" style="color: var(--accent);">01</span>
+                        <h2 class="fs-4 mb-0 fw-medium">Brief the bridge</h2>
+                    </div>
+                    <span class="panel-note text-muted small">Plain language is welcome</span>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="rawRequirementInput" class="form-label text-muted text-uppercase fw-bold" style="letter-spacing: .14em; font-size: .7rem;">Your requirements</label>
+                    <textarea id="rawRequirementInput" class="form-control" rows="12" maxlength="20000" placeholder="Tell us what you are building, who it serves, and what success looks like..." style="background-color: #f8f8f3; font-family: Arial, sans-serif;"></textarea>
+                </div>
+                <div class="input-footer d-flex justify-content-between align-items-center mb-3">
+                    <span id="characterCount" class="text-muted small">0 / 20,000</span>
+                    <button id="generateBtn" class="btn btn-primary fw-bold text-uppercase" style="background-color: var(--accent); border-color: var(--accent); letter-spacing: .05em;" type="button">
+                        <span id="generateSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        <span id="generateBtnText">Generate specification</span>
+                        <strong class="ms-2">-></strong>
+                    </button>
+                </div>
+                <p id="requestStatus" class="request-status fw-bold small text-center" style="color: var(--accent); min-height: 1.5rem;" role="status"></p>
+            </section>
+        </div>
 
-        <section id="outputSection" class="output-panel" hidden>
-            <div class="panel-heading">
-                <div><span class="step-number">02</span><h2 id="specTitle">Your specification</h2></div>
-                <div><button id="copyBtn" class="btn btn-quiet" type="button" title="Copy specification">Copy JSON</button> <button id="exportBtn" class="btn btn-quiet" type="button">Export PDF</button></div>
-            </div>
-            <p id="specSummary" class="summary"></p>
-            <div class="metric-row" id="metricRow"></div>
-            <div class="spec-grid">
-                <article class="spec-section"><h3>Functional requirements</h3><div id="functionalRequirements"></div></article>
-                <article class="spec-section"><h3>User stories</h3><div id="userStories"></div></article>
-                <article class="spec-section"><h3>Non-functional requirements</h3><div id="nonFunctionalRequirements"></div></article>
-                <article class="spec-section attention"><h3>Open gaps & risks</h3><div id="gapsAndRisks"></div></article>
-            </div>
-        </section>
+        <div class="col-lg-7 col-md-12">
+            <section id="outputSection" class="output-panel card p-4 shadow-sm h-100 d-none" style="background-color: var(--panel); border-color: var(--line);">
+                <div class="panel-heading d-flex justify-content-between align-items-baseline mb-4">
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="step-number fw-bold" style="color: var(--accent);">02</span>
+                        <h2 id="specTitle" class="fs-4 mb-0 fw-medium">Your specification</h2>
+                    </div>
+                    <div>
+                        <button id="copyBtn" class="btn btn-outline-secondary btn-sm me-2" type="button" title="Copy specification">Copy JSON</button>
+                        <button id="exportBtn" class="btn btn-outline-secondary btn-sm" type="button">Export PDF</button>
+                    </div>
+                </div>
+                <p id="specSummary" class="summary text-muted mb-4"></p>
+
+                <div class="metric-row d-flex flex-wrap gap-2 mb-4" id="metricRow"></div>
+
+                <div class="spec-grid row g-3">
+                    <div class="col-md-6">
+                        <article class="spec-section p-3 h-100 border" style="background-color: var(--panel);">
+                            <h3 class="fs-6 fw-bold mb-3">Functional requirements</h3>
+                            <div id="functionalRequirements"></div>
+                        </article>
+                    </div>
+                    <div class="col-md-6">
+                        <article class="spec-section p-3 h-100 border" style="background-color: var(--panel);">
+                            <h3 class="fs-6 fw-bold mb-3">User stories</h3>
+                            <div id="userStories"></div>
+                        </article>
+                    </div>
+                    <div class="col-md-6">
+                        <article class="spec-section p-3 h-100 border" style="background-color: var(--panel);">
+                            <h3 class="fs-6 fw-bold mb-3">Non-functional requirements</h3>
+                            <div id="nonFunctionalRequirements"></div>
+                        </article>
+                    </div>
+                    <div class="col-md-6">
+                        <article class="spec-section p-3 h-100 border border-danger" style="background-color: var(--panel);">
+                            <h3 class="fs-6 fw-bold mb-3 text-danger">Open gaps & risks</h3>
+                            <div id="gapsAndRisks"></div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+        </div>
     </main>
 </div>
