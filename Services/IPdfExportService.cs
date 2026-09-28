@@ -1,8 +1,9 @@
 using SpecBridge.Models;
+using System.IO;
 
 namespace SpecBridge.Services;
 
 public interface IPdfExportService
 {
-    byte[] CreatePdf(SpecResponse specification);
+    Stream CreatePdf(SpecResponse specification);
 }

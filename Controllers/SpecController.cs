@@ -62,7 +62,7 @@ public class SpecController : ControllerBase
             return BadRequest(new { error = "A specification document is required." });
         }
 
-        var pdf = _pdfExportService.CreatePdf(specification);
-        return File(pdf, "application/pdf", "specbridge-specification.pdf");
+        var pdfStream = _pdfExportService.CreatePdf(specification);
+        return File(pdfStream, "application/pdf", "specbridge-specification.pdf");
     }
 }

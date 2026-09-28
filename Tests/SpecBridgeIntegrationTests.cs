@@ -66,6 +66,32 @@ public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFa
     }
 
     [Fact]
+    public async Task ExportPdf_ReturnsAnAttachmentContainingPdfBytes()
+    {
+        var specification = new SpecResponse(
+            Title: "Leave management",
+            Summary: "A workflow for requesting leave.",
+            FunctionalRequirements: [new FunctionalRequirement("FR-001", "Submit leave", "Must", ["Show confirmation."])],
+            NonFunctionalRequirements: [new NonFunctionalRequirement("Performance", "Respond quickly", "Under two seconds")],
+            UserStories: [new UserStory("US-001", "employee", "request leave", "I can plan time off", ["Request is recorded."])],
+            ClarifyingQuestions: [new ClarifyingQuestion("Notifications", "Which channels?", "Affects delivery design.")],
+            Risks: [new Risk("Requests may be missed.", "High", "Send a confirmation.")]
+        );
+
+        using var content = JsonContent.Create(specification);
+        using var response = await _client.PostAsync("/api/export-pdf", content);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Contains("specbridge-specification.pdf", response.Content.Headers.ContentDisposition?.FileName);
+
+        var pdfBytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.True(pdfBytes.Length > 5);
+        Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(pdfBytes, 0, 5));
+    }
+
+    [Fact]
     public async Task AiService_ReturnsParsingErrorForMalformedProviderEnvelope()
     {
         var configuration = new ConfigurationBuilder()
