@@ -9,7 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Tests/**/*.cs" />
+    <Compile Remove="Tests\**" />
+    <Content Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.21" />
     <PackageReference Include="QuestPDF" Version="2024.12.3" />
   </ItemGroup>

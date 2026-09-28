@@ -1,0 +1,144 @@
+@model SpecBridge.Models.SpecResponse
+
+@if (Model != null)
+{
+    <div class="spec-dashboard">
+        <header class="mb-4">
+            <h2>@Model.Title</h2>
+            <p class="lead">@Model.Summary</p>
+        </header>
+
+        @if (Model.Risks != null && Model.Risks.Any())
+        {
+            <section class="mb-4">
+                <h3>Risks</h3>
+                <div class="list-group">
+                    @foreach (var risk in Model.Risks)
+                    {
+                        <div class="list-group-item list-group-item-danger border-danger mb-2 rounded">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1 text-danger">
+                                    <span class="badge bg-danger">Risk</span> @risk.Severity
+                                </h5>
+                            </div>
+                            <p class="mb-1">@risk.Description</p>
+                            <small class="text-muted"><strong>Mitigation:</strong> @risk.Mitigation</small>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (Model.ClarifyingQuestions != null && Model.ClarifyingQuestions.Any())
+        {
+            <section class="mb-4">
+                <h3>Clarifying Questions</h3>
+                <div class="list-group">
+                    @foreach (var question in Model.ClarifyingQuestions)
+                    {
+                        <div class="list-group-item list-group-item-warning border-warning mb-2 rounded">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1 text-warning">
+                                    <span class="badge bg-warning text-dark">Question</span> @question.Area
+                                </h5>
+                            </div>
+                            <p class="mb-1">@question.Question</p>
+                            <small class="text-muted"><strong>Impact:</strong> @question.Impact</small>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (Model.UserStories != null && Model.UserStories.Any())
+        {
+            <section class="mb-4">
+                <h3>User Stories</h3>
+                <div class="list-group">
+                    @foreach (var story in Model.UserStories)
+                    {
+                        <div class="list-group-item mb-2 rounded shadow-sm border">
+                            <h5 class="mb-1">@story.Id</h5>
+                            <p class="mb-1">
+                                <strong>As a</strong> @story.AsA, <strong>I want</strong> @story.IWant, <strong>so that</strong> @story.SoThat.
+                            </p>
+                            
+                            @if (story.AcceptanceCriteria != null && story.AcceptanceCriteria.Any())
+                            {
+                                <details class="mt-2">
+                                    <summary class="fw-bold cursor-pointer text-primary">Acceptance Criteria</summary>
+                                    <ul class="mt-2">
+                                        @foreach (var criteria in story.AcceptanceCriteria)
+                                        {
+                                            <li>@criteria</li>
+                                        }
+                                    </ul>
+                                </details>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (Model.FunctionalRequirements != null && Model.FunctionalRequirements.Any())
+        {
+            <section class="mb-4">
+                <h3>Functional Requirements</h3>
+                <div class="list-group">
+                    @foreach (var req in Model.FunctionalRequirements)
+                    {
+                        <div class="list-group-item mb-2 rounded border">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@req.Id</h5>
+                                <span class="badge bg-secondary">@req.Priority</span>
+                            </div>
+                            <p class="mb-1">@req.Description</p>
+                            
+                            @if (req.AcceptanceCriteria != null && req.AcceptanceCriteria.Any())
+                            {
+                                <details class="mt-2">
+                                    <summary class="fw-bold cursor-pointer text-primary">Acceptance Criteria</summary>
+                                    <ul class="mt-2">
+                                        @foreach (var criteria in req.AcceptanceCriteria)
+                                        {
+                                            <li>@criteria</li>
+                                        }
+                                    </ul>
+                                </details>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (Model.NonFunctionalRequirements != null && Model.NonFunctionalRequirements.Any())
+        {
+            <section class="mb-4">
+                <h3>Non-Functional Requirements</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Requirement</th>
+                                <th>Target</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var req in Model.NonFunctionalRequirements)
+                            {
+                                <tr>
+                                    <td>@req.Category</td>
+                                    <td>@req.Requirement</td>
+                                    <td>@req.Target</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        }
+    </div>
+}

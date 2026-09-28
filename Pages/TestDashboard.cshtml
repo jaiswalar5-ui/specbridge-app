@@ -1,0 +1,14 @@
+@page
+@using SpecBridge.Models
+@{
+    var mockSpec = new SpecResponse(
+        Title: "Test <script>alert(1)</script>",
+        Summary: "Test Summary",
+        FunctionalRequirements: new List<FunctionalRequirement>(),
+        NonFunctionalRequirements: new List<NonFunctionalRequirement>(),
+        UserStories: new List<UserStory>(),
+        ClarifyingQuestions: new List<ClarifyingQuestion>(),
+        Risks: new List<Risk>()
+    );
+}
+<partial name="_SpecDashboard" model="mockSpec" />

@@ -84,6 +84,21 @@ public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFa
 
         Assert.Equal("Parsing Error", response.Title);
     }
+
+    [Fact]
+    public async Task SpecDashboard_EncodesHtmlToPreventXss()
+    {
+        var response = await _client.GetAsync("/TestDashboard");
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        // The malicious script should not be present as-is
+        Assert.DoesNotContain("<script>alert(1)</script>", content);
+
+        // It should be HTML-encoded
+        Assert.Contains("&lt;script&gt;alert(1)&lt;/script&gt;", content);
+    }
 }
 
 internal sealed class StubHttpClientFactory : IHttpClientFactory
