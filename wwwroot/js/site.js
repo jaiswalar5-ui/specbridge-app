@@ -11,9 +11,38 @@ document.addEventListener("DOMContentLoaded", () => {
         characterCount.textContent = `${rawRequirementInput.value.length.toLocaleString()} / 20,000`;
     });
 
+    const textElement = (tagName, className, text) => {
+        const element = document.createElement(tagName);
+        element.className = className;
+        element.textContent = text ?? "";
+        return element;
+    };
+
+    const renderAcceptanceCriteria = criteria => {
+        if (!criteria?.length) return null;
+
+        const details = document.createElement("details");
+        details.className = "mt-2";
+        const summary = textElement("summary", "fw-bold cursor-pointer text-primary", "Acceptance Criteria");
+        const list = document.createElement("ul");
+        list.className = "mt-2";
+        criteria.forEach(criterion => list.append(textElement("li", "", criterion)));
+        details.append(summary, list);
+        return details;
+    };
+
     const renderList = (elementId, items, renderItem) => {
         const element = document.getElementById(elementId);
-        element.innerHTML = items?.length ? `<ul class="list-group list-group-flush">${items.map(renderItem).join("")}</ul>` : '<p class="text-muted small">Nothing identified yet.</p>';
+        element.replaceChildren();
+        if (!items?.length) {
+            element.append(textElement("p", "text-muted small", "Nothing identified yet."));
+            return;
+        }
+
+        const list = document.createElement("ul");
+        list.className = "list-group list-group-flush";
+        items.forEach(item => list.append(renderItem(item)));
+        element.append(list);
     };
 
     if (generateBtn) {
@@ -74,17 +103,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 document.getElementById("specTitle").textContent = latestSpecification.title;
                 document.getElementById("specSummary").textContent = latestSpecification.summary;
-                document.getElementById("metricRow").innerHTML = [
+                const metrics = [
                     [latestSpecification.functionalRequirements?.length || 0, "functional"],
                     [latestSpecification.userStories?.length || 0, "stories"],
                     [latestSpecification.clarifyingQuestions?.length || 0, "open gaps"],
                     [latestSpecification.risks?.length || 0, "risks"]
-                ].map(([count, label]) => `<span class="badge bg-success bg-opacity-25 text-success-emphasis p-2 me-2 mb-2 border border-success border-opacity-50"><div class="fs-5 fw-bold">${count}</div><div class="small fw-normal text-uppercase">${label}</div></span>`).join("");
+                ];
+                const metricRow = document.getElementById("metricRow");
+                metricRow.replaceChildren(...metrics.map(([count, label]) => {
+                    const badge = textElement("span", "badge bg-success bg-opacity-25 text-success-emphasis p-2 me-2 mb-2 border border-success border-opacity-50", "");
+                    badge.append(textElement("div", "fs-5 fw-bold", count), textElement("div", "small fw-normal text-uppercase", label));
+                    return badge;
+                }));
 
-                renderList("functionalRequirements", latestSpecification.functionalRequirements, item => `<li class="list-group-item bg-transparent px-0 border-light py-2" style="font-size: 0.85rem;"><b>${item.id} <span class="pill text-muted text-uppercase" style="font-size: .65rem;">${item.priority}</span></b> ${item.description}</li>`);
-                renderList("userStories", latestSpecification.userStories, item => `<li class="list-group-item bg-transparent px-0 border-light py-2" style="font-size: 0.85rem;"><b>${item.id}</b> As a ${item.asA}, I want ${item.iWant}, so that ${item.soThat}.</li>`);
-                renderList("nonFunctionalRequirements", latestSpecification.nonFunctionalRequirements, item => `<li class="list-group-item bg-transparent px-0 border-light py-2" style="font-size: 0.85rem;"><b>${item.category}</b> ${item.requirement}<br><span class="pill text-muted text-uppercase" style="font-size: .65rem;">Target: ${item.target}</span></li>`);
-                renderList("gapsAndRisks", [...(latestSpecification.clarifyingQuestions || []).map(item => ({ ...item, type: "Gap", text: item.question })), ...(latestSpecification.risks || []).map(item => ({ ...item, type: "Risk", text: item.description }))], item => `<li class="list-group-item bg-transparent px-0 border-light py-2 text-danger" style="font-size: 0.85rem;"><b><span class="pill text-danger text-uppercase" style="font-size: .65rem;">${item.type}</span> ${item.area || item.severity}</b> ${item.text}</li>`);
+                renderList("functionalRequirements", latestSpecification.functionalRequirements, item => {
+                    const entry = textElement("li", "list-group-item bg-transparent px-0 border-light py-2", "");
+                    const heading = document.createElement("b");
+                    heading.append(document.createTextNode(`${item.id} `), textElement("span", "pill text-muted text-uppercase", item.priority));
+                    entry.append(heading, document.createTextNode(` ${item.description ?? ""}`));
+                    const criteria = renderAcceptanceCriteria(item.acceptanceCriteria);
+                    if (criteria) entry.append(criteria);
+                    return entry;
+                });
+                renderList("userStories", latestSpecification.userStories, item => {
+                    const entry = textElement("li", "list-group-item bg-transparent px-0 border-light py-2", "");
+                    entry.append(textElement("b", "", item.id), document.createTextNode(` As a ${item.asA}, I want ${item.iWant}, so that ${item.soThat}.`));
+                    const criteria = renderAcceptanceCriteria(item.acceptanceCriteria);
+                    if (criteria) entry.append(criteria);
+                    return entry;
+                });
+                renderList("nonFunctionalRequirements", latestSpecification.nonFunctionalRequirements, item => {
+                    const entry = textElement("li", "list-group-item bg-transparent px-0 border-light py-2", "");
+                    entry.append(textElement("b", "", item.category), document.createTextNode(` ${item.requirement ?? ""} `), textElement("span", "pill text-muted text-uppercase", `Target: ${item.target ?? ""}`));
+                    return entry;
+                });
+                renderList("gapsAndRisks", [
+                    ...(latestSpecification.clarifyingQuestions || []).map(item => ({ ...item, type: "Question", text: item.question, label: item.area, badgeClass: "badge bg-warning text-dark" })),
+                    ...(latestSpecification.risks || []).map(item => ({ ...item, type: "Risk", text: item.description, label: item.severity, badgeClass: "badge bg-danger" }))
+                ], item => {
+                    const entry = textElement("li", "list-group-item bg-transparent px-0 border-light py-2", "");
+                    const heading = document.createElement("b");
+                    heading.append(textElement("span", item.badgeClass, item.type), document.createTextNode(` ${item.label ?? ""}`));
+                    entry.append(heading, document.createTextNode(` ${item.text ?? ""}`));
+                    return entry;
+                });
 
                 requestStatus.textContent = "Specification ready.";
             } catch (err) {
