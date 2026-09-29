@@ -24,6 +24,19 @@ public sealed class AiService : IAiService
         string prompt,
         CancellationToken cancellationToken = default)
     {
+        if (_configuration.GetValue<bool>("UseDemoMode"))
+        {
+            return new SpecResponse(
+                Title: "Demo Specification",
+                Summary: "This is a mock specification generated in Demo Mode.",
+                FunctionalRequirements: new[] { new FunctionalRequirement("FR-001", "The system shall work.", "Must", new[] { "It works." }) },
+                NonFunctionalRequirements: new[] { new NonFunctionalRequirement("Performance", "Fast", "100ms") },
+                UserStories: new[] { new UserStory("US-001", "User", "use the system", "I can do things.", new[] { "System is used." }) },
+                ClarifyingQuestions: new[] { new ClarifyingQuestion("General", "Is this real?", "None") },
+                Risks: new[] { new Risk("Fake Data", "Low", "Disable Demo Mode.") }
+            );
+        }
+
         var provider = _configuration["Llm:Provider"]?.Trim().ToLowerInvariant() ?? "openai";
         var apiKey = _configuration["Llm:ApiKey"];
 
