@@ -81,6 +81,10 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 
+app.MapGet("/crash", () => {
+    throw new Exception("Fake crash!");
+});
+
 app.Run();
 
 // Make Program accessible for WebApplicationFactory / UserSecrets
