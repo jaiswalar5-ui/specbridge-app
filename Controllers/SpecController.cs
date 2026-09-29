@@ -44,6 +44,12 @@ public class SpecController : ControllerBase
         _logger.LogInformation("Processing spec generation request");
         var specification = await _aiService.GenerateSpecAsync(request.Prompt, cancellationToken);
 
+        var errorTitles = new[] { "Configuration Error", "API Error", "Parsing Error", "Validation Error" };
+        if (specification is null || errorTitles.Contains(specification.Title))
+        {
+            return StatusCode(500, new { success = false, error = specification?.Summary ?? "An unknown error occurred." });
+        }
+
         return Ok(new
         {
             Status = "Success",

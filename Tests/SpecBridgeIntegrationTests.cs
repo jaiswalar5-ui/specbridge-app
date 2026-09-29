@@ -127,8 +127,8 @@ public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFa
 
         var response = await service.GenerateSpecAsync("Create a leave workflow.");
 
-        Assert.Equal("Demo Specification", response.Title);
-        Assert.Equal("This is a mock specification generated in Demo Mode.", response.Summary);
+        Assert.Equal("Helpdesk Ticketing System", response.Title);
+        Assert.StartsWith("An internal IT helpdesk system", response.Summary);
         Assert.Equal(0, httpClientFactory.RequestCount);
     }
 

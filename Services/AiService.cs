@@ -27,13 +27,32 @@ public sealed class AiService : IAiService
         if (_configuration.GetValue<bool>("UseDemoMode"))
         {
             return new SpecResponse(
-                Title: "Demo Specification",
-                Summary: "This is a mock specification generated in Demo Mode.",
-                FunctionalRequirements: new[] { new FunctionalRequirement("FR-001", "The system shall work.", "Must", new[] { "It works." }) },
-                NonFunctionalRequirements: new[] { new NonFunctionalRequirement("Performance", "Fast", "100ms") },
-                UserStories: new[] { new UserStory("US-001", "User", "use the system", "I can do things.", new[] { "System is used." }) },
-                ClarifyingQuestions: new[] { new ClarifyingQuestion("General", "Is this real?", "None") },
-                Risks: new[] { new Risk("Fake Data", "Low", "Disable Demo Mode.") }
+                Title: "Helpdesk Ticketing System",
+                Summary: "An internal IT helpdesk system allowing employees to raise support tickets, technicians to manage them, and managers to oversee open ticket volume.",
+                FunctionalRequirements: new[] { 
+                    new FunctionalRequirement("FR-001", "Ticket Creation", "Must", new[] { "Employees can submit a new ticket with title, description, and urgency." }),
+                    new FunctionalRequirement("FR-002", "Ticket Assignment", "Must", new[] { "System auto-assigns tickets to the technician queue.", "Technicians can claim tickets." }),
+                    new FunctionalRequirement("FR-003", "Ticket Updates", "Must", new[] { "Technicians can update ticket status and add internal notes." }),
+                    new FunctionalRequirement("FR-004", "Manager Dashboard", "Should", new[] { "Managers can view a dashboard showing open vs resolved tickets." })
+                },
+                NonFunctionalRequirements: new[] { 
+                    new NonFunctionalRequirement("Performance", "Page Load Time", "Dashboard must load within 2 seconds under normal load."),
+                    new NonFunctionalRequirement("Security", "Authentication", "Must integrate with company SSO (Single Sign-On).")
+                },
+                UserStories: new[] { 
+                    new UserStory("US-001", "Employee", "raise an IT support ticket", "I can get my technical issues resolved quickly.", new[] { "Ticket form is accessible from intranet.", "Receives confirmation email." }),
+                    new UserStory("US-002", "Technician", "respond to open tickets", "I can resolve employee issues effectively.", new[] { "Can filter by open status.", "Can change status to 'Resolved'." }),
+                    new UserStory("US-003", "Manager", "see the number of open tickets", "I can balance technician workloads and monitor SLA.", new[] { "Dashboard shows total open count.", "Can see metrics by day." })
+                },
+                ClarifyingQuestions: new[] { 
+                    new ClarifyingQuestion("Integrations", "Do tickets need to sync with Jira or ServiceNow?", "Could expand project scope significantly if required."),
+                    new ClarifyingQuestion("SLA", "What are the SLA definitions for ticket resolution?", "Needed for manager dashboard metrics."),
+                    new ClarifyingQuestion("Notifications", "Should technicians be notified via email or Slack when a ticket is created?", "Impacts the notification service design.")
+                },
+                Risks: new[] { 
+                    new Risk("SSO Integration Complexity", "Medium", "Start SSO integration spike early in the sprint to mitigate technical blockers."),
+                    new Risk("Scope Creep", "Low", "Strictly limit v1 to basic ticket flow, deferring SLA alerting to v2.")
+                }
             );
         }
 
@@ -111,7 +130,7 @@ public sealed class AiService : IAiService
     private async Task<string> CallGeminiAsync(string prompt, string apiKey, CancellationToken cancellationToken)
     {
         var model = _configuration["Llm:GeminiModel"] ?? "gemini-2.0-flash";
-        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
+        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
             Content = JsonContent.Create(new
@@ -120,6 +139,7 @@ public sealed class AiService : IAiService
                 generationConfig = new { temperature = 0.1, responseMimeType = "application/json" }
             })
         };
+        request.Headers.Add("x-goog-api-key", apiKey);
 
         return await SendAsync(request, cancellationToken);
     }
