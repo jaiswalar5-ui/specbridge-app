@@ -85,6 +85,17 @@ app.MapGet("/crash", () => {
     throw new Exception("Fake crash!");
 });
 
+var useDemoMode = app.Configuration.GetValue<bool>("UseDemoMode");
+if (useDemoMode)
+{
+    app.Logger.LogInformation("Running in DEMO MODE. LLM calls are bypassed.");
+}
+else
+{
+    var provider = app.Configuration["Llm:Provider"] ?? "openai";
+    app.Logger.LogInformation("Running in LIVE MODE. Using provider: {provider}.", provider);
+}
+
 app.Run();
 
 // Make Program accessible for WebApplicationFactory / UserSecrets

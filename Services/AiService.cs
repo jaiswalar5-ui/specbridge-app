@@ -110,9 +110,8 @@ public sealed class AiService : IAiService
 
     private async Task<string> CallGeminiAsync(string prompt, string apiKey, CancellationToken cancellationToken)
     {
-        var model = _configuration["Llm:GeminiModel"] ?? "gemini-1.5-flash";
-        // Use x-goog-api-key header to avoid logging the API key in the URL
-        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent";
+        var model = _configuration["Llm:GeminiModel"] ?? "gemini-2.0-flash";
+        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
             Content = JsonContent.Create(new
@@ -121,7 +120,6 @@ public sealed class AiService : IAiService
                 generationConfig = new { temperature = 0.1, responseMimeType = "application/json" }
             })
         };
-        request.Headers.Add("x-goog-api-key", apiKey);
 
         return await SendAsync(request, cancellationToken);
     }

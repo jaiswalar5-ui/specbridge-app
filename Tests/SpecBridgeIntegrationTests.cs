@@ -14,10 +14,12 @@ namespace SpecBridge.Tests;
 
 public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFactory>
 {
+    private readonly TestApplicationFactory _factory;
     private readonly HttpClient _client;
 
     public SpecBridgeIntegrationTests(TestApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -112,6 +114,70 @@ public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFa
     }
 
     [Fact]
+    public async Task AiService_DemoModeReturnsMockDataWithoutCallingProvider()
+    {
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var httpClientFactory = new StubHttpClientFactory("{}");
+        var service = new AiService(
+            httpClientFactory,
+            configuration,
+            NullLogger<AiService>.Instance);
+
+        Assert.True(configuration.GetValue<bool>("UseDemoMode"));
+
+        var response = await service.GenerateSpecAsync("Create a leave workflow.");
+
+        Assert.Equal("Demo Specification", response.Title);
+        Assert.Equal("This is a mock specification generated in Demo Mode.", response.Summary);
+        Assert.Equal(0, httpClientFactory.RequestCount);
+    }
+
+    [Fact]
+    public async Task AiService_DisabledDemoModeCallsConfiguredProvider()
+    {
+        const string endpoint = "https://openai.test/v1/chat/completions";
+        const string providerResponse = """
+            {"choices":[{"message":{"content":"{\"title\":\"Provider Specification\",\"summary\":\"From provider.\",\"functionalRequirements\":[],\"nonFunctionalRequirements\":[],\"userStories\":[],\"clarifyingQuestions\":[],\"risks\":[]}"}}]}
+            """;
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["UseDemoMode"] = "false",
+                ["Llm:Provider"] = "openai",
+                ["Llm:ApiKey"] = "test-key",
+                ["Llm:OpenAiEndpoint"] = endpoint
+            })
+            .Build();
+        var httpClientFactory = new StubHttpClientFactory(providerResponse);
+        var service = new AiService(
+            httpClientFactory,
+            configuration,
+            NullLogger<AiService>.Instance);
+
+        var response = await service.GenerateSpecAsync("Create a leave workflow.");
+
+        Assert.Equal("Provider Specification", response.Title);
+        Assert.Equal(1, httpClientFactory.RequestCount);
+    }
+
+    [Fact]
+    public async Task FakeCrash_InProductionShowsFriendlyErrorWithoutStackTrace()
+    {
+        using var productionClient = _factory
+            .WithWebHostBuilder(builder => builder.UseEnvironment("Production"))
+            .CreateClient();
+
+        using var response = await productionClient.GetAsync("/crash");
+        var content = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Contains("An error occurred while processing your request.", content);
+        Assert.DoesNotContain("Fake crash!", content);
+        Assert.DoesNotContain("System.Exception", content);
+        Assert.DoesNotContain(" at Program", content);
+    }
+
+    [Fact]
     public async Task SpecDashboard_EncodesHtmlToPreventXss()
     {
         var response = await _client.GetAsync("/TestDashboard");
@@ -129,22 +195,26 @@ public sealed class SpecBridgeIntegrationTests : IClassFixture<TestApplicationFa
 
 internal sealed class StubHttpClientFactory : IHttpClientFactory
 {
-    private readonly string _responseBody;
+    private readonly StubHttpMessageHandler _handler;
+
+    public int RequestCount => _handler.RequestCount;
 
     public StubHttpClientFactory(string responseBody)
     {
-        _responseBody = responseBody;
+        _handler = new StubHttpMessageHandler(responseBody);
     }
 
     public HttpClient CreateClient(string name)
     {
-        return new HttpClient(new StubHttpMessageHandler(_responseBody));
+        return new HttpClient(_handler, disposeHandler: false);
     }
 }
 
 internal sealed class StubHttpMessageHandler : HttpMessageHandler
 {
     private readonly string _responseBody;
+
+    public int RequestCount { get; private set; }
 
     public StubHttpMessageHandler(string responseBody)
     {
@@ -155,6 +225,7 @@ internal sealed class StubHttpMessageHandler : HttpMessageHandler
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
+        RequestCount++;
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(_responseBody)
